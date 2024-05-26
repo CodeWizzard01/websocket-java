@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px; /* Add padding to the body to create space around the edges */
+        }
+        #messages {
+            height: 80vh;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #444;
+            margin-bottom: 20px; /* Increase margin-bottom to create more space below the messages div */
+        }
+        #messageForm {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px; /* Add margin-bottom to create space below the form */
+        }
+        #messageInput {
+            flex-grow: 1;
+            margin-right: 10px;
+            padding: 5px;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #444;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+<body>
+<h1>Chat App</h1>
+
+
+<form id="messageForm">
+    <input type="text" id="messageInput" placeholder="Enter your message">
+    <button type="submit">Send</button>
+</form>
+<div id="messages"></div>
+
+<script>
+    var socket = new SockJS('http://localhost:8080/ws');
+
+    var stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function(frame) {
+        stompClient.subscribe('/topic/messages', function(messageOutput) {
+            var messagesDiv = document.getElementById('messages');
+            var messageParagraph = document.createElement('p');
+            messageParagraph.innerText = 'Received: ' + messageOutput.body;
+            messagesDiv.appendChild(messageParagraph);
+        });
+    });
+
+    document.getElementById('messageForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var messageInput = document.getElementById('messageInput');
+        stompClient.send("/app/chat", {}, messageInput.value);
+        messageInput.value = '';
+    });
+</script>
+</body>
+</html>
